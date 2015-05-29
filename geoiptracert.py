@@ -3,41 +3,44 @@
 #Description: Show Ip Location of tracert.
 from scapy.all import *
 import os,sys
-import datetime
+import datetime,time
 import IP2Location;
 
 
 def tracert(ip):
-	hostname = ip
+	try:
+					hostname = ip
 
-	print 'TTL ', "IP".ljust(18, ' '), "Country".ljust(20, ' '), "RTT"
-	print '====', "=".ljust(18, '='), "=".ljust(20, '='), "==="
-	for i in range(1, 28):
-			pkt = IP(dst=hostname, ttl=i) / UDP(dport=80)
-			# Send the packet and get a reply
-			timefrom = datetime.datetime.now()
-			reply = sr1(pkt, verbose=0, timeout=10)
-			resptime = datetime.datetime.now() - timefrom
-			resptime = str( int(resptime.total_seconds() * 1000)) + 'ms'
-			
- 
-			if resptime == '0ms' :
-				resptime = '<1ms'			
+					print 'TTL ', "IP".ljust(18, ' '), "Country".ljust(20, ' '), "RTT"
+					print '====', "=".ljust(18, '='), "=".ljust(20, '='), "==="
+					for i in range(1, 28):
+							pkt = IP(dst=hostname, ttl=i) / UDP(dport=80)
+							# Send the packet and get a reply
+							timefrom = time.clock() 
+							reply = sr1(pkt, verbose=0, timeout=10)
+							resptime = time.clock() - timefrom
+							resptime = str( int(resptime*1000 )) + 'ms'
+							
+				 
+							if resptime == '0ms' :
+								resptime = '<1ms'			
 
-			if reply is None:
-					# No reply =(
-					print str(i).ljust(4, ' '), "* * * *"
-					break
-			elif reply.type == 3:
-					# We've reached our destination
-					print "Done!", reply.src
-					break
-			else:
-					# We're in the middle somewhere
-					strttl = str(i).ljust(4, ' ')
-					_short,_long = get_location(reply.src)
-					print strttl, reply.src.ljust(18, ' '), _long.ljust(20, ' '), resptime
-
+							if reply is None:
+									# No reply =(
+									print str(i).ljust(4, ' '), "* * * *"
+									break
+							elif reply.type == 3:
+									# We've reached our destination
+									print "Done!", reply.src
+									break
+							else:
+									# We're in the middle somewhere
+									strttl = str(i).ljust(4, ' ')
+									_short,_long = get_location(reply.src)
+									print strttl, reply.src.ljust(18, ' '), _long.ljust(20, ' '), resptime
+	except Exception,e:
+		print e
+		
 
 def get_location(ip):
 	IP2LocObj = IP2Location.IP2Location();
