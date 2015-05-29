@@ -3,19 +3,30 @@
 #Description: Show Ip Location of tracert.
 from scapy.all import *
 import os,sys
-
+import datetime
 import IP2Location;
 
 
 def tracert(ip):
 	hostname = ip
+
+	print 'TTL ', "IP".ljust(18, ' '), "Country".ljust(20, ' '), "RTT"
+	print '====', "=".ljust(18, '='), "=".ljust(20, '='), "==="
 	for i in range(1, 28):
 			pkt = IP(dst=hostname, ttl=i) / UDP(dport=80)
 			# Send the packet and get a reply
-			reply = sr1(pkt, verbose=0, timeout=5)
+			timefrom = datetime.datetime.now()
+			reply = sr1(pkt, verbose=0, timeout=10)
+			resptime = datetime.datetime.now() - timefrom
+			resptime = str( int(resptime.total_seconds() * 1000)) + 'ms'
+			
+ 
+			if resptime == '0ms' :
+				resptime = '<1ms'			
+
 			if reply is None:
 					# No reply =(
-					print "%d hops away: " % i , "* Blocked or Filtered by hop ", (i-1)
+					print str(i).ljust(4, ' '), "* * * *"
 					break
 			elif reply.type == 3:
 					# We've reached our destination
@@ -23,8 +34,9 @@ def tracert(ip):
 					break
 			else:
 					# We're in the middle somewhere
+					strttl = str(i).ljust(4, ' ')
 					_short,_long = get_location(reply.src)
-					print "%d hops away: " % i , reply.src, _long
+					print strttl, reply.src.ljust(18, ' '), _long.ljust(20, ' '), resptime
 
 
 def get_location(ip):
@@ -58,11 +70,4 @@ target = sys.argv[1]
 
 print header
 tracert(target)
-#ans,unans=sr(IP(dst=target,ttl=30,id=RandShort())/TCP(flags=0x2),timeout=5,	verbose=True)
-#for snd,rcv in ans:
-#	print snd.ttl, rcv.src, isinstance(rcv.payload, TCP)
-
-#print unans[IP]
-#or snd,rcv in unans:
-#print snd.ttl, rcv.src, isinstance(rcv.payload, TCP)
 
